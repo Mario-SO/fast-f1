@@ -45,6 +45,17 @@ export const MainLayout = (props: LayoutProps) => {
           src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"
           defer
         ></script>
+        <script>
+          // Enable HTMX logging for debugging
+          htmx.logAll();
+          
+          // Add some debugging for driver clicks
+          document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, checking for driver details functions...');
+            console.log('showDriverDetails available:', typeof window.showDriverDetails);
+            console.log('closeDriverDetails available:', typeof window.closeDriverDetails);
+          });
+        </script>
       </head>
       <body class="bg-gray-50 font-sans antialiased">
         <!-- Main Content -->
