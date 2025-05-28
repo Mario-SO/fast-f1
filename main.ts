@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { serveStatic } from "hono/deno"; // For serving static files if needed later
 
 // Import feature routes
 import liveDashboardRoutes from "./features/live_dashboard/live_dashboard.routes.tsx"; // Adjusted path
