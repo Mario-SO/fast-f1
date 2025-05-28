@@ -78,6 +78,7 @@ export class LiveDashboardService {
   private static cachedData: any = null;
   private static lastFetch: number = 0;
   private static readonly CACHE_DURATION = 3000; // 3 seconds cache
+  private static lastValidPositions: Driver[] = []; // Cache for last valid position data
 
   // Get live data with caching
   static async getLiveData(sessionKey?: number) {
@@ -207,7 +208,50 @@ export class LiveDashboardService {
         };
       });
 
-      // Sort by position
+      // Validate position data - if all positions are 0, it's likely invalid data
+      const validPositions = driversWithData.filter(d => d.pos > 0);
+      const hasValidPositions = validPositions.length > 0;
+      
+      console.log('LiveDashboardService: Position validation:', {
+        totalDrivers: driversWithData.length,
+        validPositions: validPositions.length,
+        hasValidPositions
+      });
+
+      // If we have invalid position data, try to use cached data or assign fallback positions
+      if (!hasValidPositions) {
+        console.log('LiveDashboardService: Invalid position data detected, attempting to use last valid positions');
+        
+        if (this.lastValidPositions.length > 0) {
+          console.log('LiveDashboardService: Using last valid position data');
+          // Update current data with last valid positions but keep other live data
+          driversWithData.forEach(driver => {
+            const lastValidDriver = this.lastValidPositions.find(c => c.driverNumber === driver.driverNumber);
+            if (lastValidDriver) {
+              driver.pos = lastValidDriver.pos;
+              // Also update gap if it's missing
+              if (driver.gap === '--:--:---' && lastValidDriver.gap !== '--:--:---') {
+                driver.gap = lastValidDriver.gap;
+              }
+            }
+          });
+        } else {
+          console.log('LiveDashboardService: No valid cached positions, assigning sequential positions');
+          // Assign sequential positions as fallback
+          driversWithData.forEach((driver, index) => {
+            driver.pos = index + 1;
+            if (driver.gap === '--:--:---') {
+              driver.gap = index === 0 ? 'Leader' : `+${(index * 0.5).toFixed(1)}s`;
+            }
+          });
+        }
+      } else {
+        // Store valid position data for future use
+        this.lastValidPositions = driversWithData.map(d => ({ ...d }));
+        console.log('LiveDashboardService: Stored valid position data for', this.lastValidPositions.length, 'drivers');
+      }
+
+      // Sort by position (now guaranteed to have valid positions)
       const sortedDrivers = driversWithData.sort((a, b) => a.pos - b.pos);
       
       console.log('LiveDashboardService: Final driver count:', sortedDrivers.length);

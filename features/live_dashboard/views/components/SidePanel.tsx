@@ -111,51 +111,6 @@ export const SidePanel = ({ sessionInfo }: SidePanelProps) => {
           </div>
         </div>
       </div>
-
-        <!-- Status indicator with dynamic styling -->
-        <div class="flex items-start space-x-3 mb-3">
-          ${sessionInfo.trackStatus.flag === 'green' ? html`
-            <div class="w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
-            <div class="flex-1">
-              <span class="text-sm font-semibold text-green-700">${sessionInfo.trackStatus.message}</span>
-              <p class="text-xs text-green-600 mt-1">${sessionInfo.trackStatus.description}</p>
-            </div>
-          ` : sessionInfo.trackStatus.flag === 'yellow' ? html`
-            <div class="w-4 h-4 bg-yellow-400 rounded-full animate-pulse"></div>
-            <div class="flex-1">
-              <span class="text-sm font-semibold text-yellow-700">${sessionInfo.trackStatus.message}</span>
-              <p class="text-xs text-yellow-600 mt-1">${sessionInfo.trackStatus.description}</p>
-            </div>
-          ` : sessionInfo.trackStatus.flag === 'red' ? html`
-            <div class="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
-            <div class="flex-1">
-              <span class="text-sm font-semibold text-red-700">${sessionInfo.trackStatus.message}</span>
-              <p class="text-xs text-red-600 mt-1">${sessionInfo.trackStatus.description}</p>
-            </div>
-          ` : sessionInfo.trackStatus.flag === 'safety' ? html`
-            <div class="w-4 h-4 bg-orange-400 rounded-full animate-pulse"></div>
-            <div class="flex-1">
-              <span class="text-sm font-semibold text-orange-700">${sessionInfo.trackStatus.message}</span>
-              <p class="text-xs text-orange-600 mt-1">${sessionInfo.trackStatus.description}</p>
-            </div>
-          ` : html`
-            <div class="w-4 h-4 bg-gray-400 rounded-full"></div>
-            <div class="flex-1">
-              <span class="text-sm font-semibold text-gray-700">${sessionInfo.trackStatus.message}</span>
-              <p class="text-xs text-gray-600 mt-1">${sessionInfo.trackStatus.description}</p>
-            </div>
-          `}
-        </div>
-        
-        <!-- Additional track info -->
-        <div class="mt-3 pt-2 border-t border-gray-100">
-          <div class="flex justify-between items-center text-xs text-gray-500">
-            <span>Circuit: ${sessionInfo.circuit}</span>
-            <span>Last updated: ${new Date().toLocaleTimeString()}</span>
-          </div>
-        </div>
-      </div>
-
     </div>
   `;
 };
