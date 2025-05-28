@@ -18,7 +18,30 @@ export const SidePanel = ({ sessionInfo }: SidePanelProps) => {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <h3 class="text-base font-semibold text-gray-900">Session Info</h3>
+          ${sessionInfo.isLive ? html`
+            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          ` : html`
+            <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
+          `}
         </div>
+        
+        <!-- Live Status Banner -->
+        ${!sessionInfo.isLive ? html`
+          <div class="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span class="text-xs text-yellow-800 font-medium">Historical Data</span>
+            </div>
+            ${sessionInfo.sessionStart && sessionInfo.sessionEnd ? html`
+              <p class="text-xs text-yellow-700 mt-1">
+                Session: ${sessionInfo.sessionStart} - ${sessionInfo.sessionEnd}
+              </p>
+            ` : ''}
+          </div>
+        ` : ''}
+        
         <div class="grid grid-cols-2 gap-2 text-xs">
           <div class="flex flex-col">
             <span class="text-gray-500">Event</span>
@@ -36,6 +59,20 @@ export const SidePanel = ({ sessionInfo }: SidePanelProps) => {
             <span class="text-gray-500">Track</span>
             <span class="font-medium text-gray-900 font-mono">${sessionInfo.trackTemp}</span>
           </div>
+        </div>
+        
+        <!-- Track Status -->
+        <div class="mt-3 pt-3 border-t border-gray-100">
+          <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 rounded-full ${
+              sessionInfo.trackStatus.flag === 'green' ? 'bg-green-400' :
+              sessionInfo.trackStatus.flag === 'yellow' ? 'bg-yellow-400' :
+              sessionInfo.trackStatus.flag === 'red' ? 'bg-red-400' :
+              'bg-gray-400'
+            }"></div>
+            <span class="text-xs font-medium text-gray-900">${sessionInfo.trackStatus.message}</span>
+          </div>
+          <p class="text-xs text-gray-600 mt-1">${sessionInfo.trackStatus.description}</p>
         </div>
       </div>
 

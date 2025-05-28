@@ -37,6 +37,9 @@ export interface SessionInfo {
   circuit: string;
   location: string;
   sessionKey: number;
+  isLive: boolean;
+  sessionStart?: string;
+  sessionEnd?: string;
 }
 
 export interface DashboardStats {
@@ -79,18 +82,58 @@ export class LiveDashboardService {
   private static lastFetch: number = 0;
   private static readonly CACHE_DURATION = 3000; // 3 seconds cache
   private static lastValidPositions: Driver[] = []; // Cache for last valid position data
+  private static isLiveSession: boolean = false; // Track if current session is live
+
+  // Check if current session is live
+  static async checkIfSessionIsLive(sessionKey?: number): Promise<boolean> {
+    try {
+      const session = sessionKey ? 
+        await OpenF1Service.getLatestSession() : // Get session details if we only have key
+        await OpenF1Service.getLatestSession();
+      
+      if (!session) return false;
+      
+      const isLive = await OpenF1Service.isSessionLive(session);
+      this.isLiveSession = isLive;
+      
+      console.log('LiveDashboardService: Session live status:', {
+        sessionName: session.session_name,
+        sessionType: session.session_type,
+        isLive,
+        sessionStart: session.date_start,
+        sessionEnd: session.date_end
+      });
+      
+      return isLive;
+    } catch (error) {
+      console.error('Error checking session live status:', error);
+      this.isLiveSession = false;
+      return false;
+    }
+  }
+
+  // Get current session live status
+  static getSessionLiveStatus(): boolean {
+    return this.isLiveSession;
+  }
 
   // Get live data with caching
   static async getLiveData(sessionKey?: number) {
     const now = Date.now();
     
+    // Check if session is live first
+    const isLive = await this.checkIfSessionIsLive(sessionKey);
+    
+    // If session is not live, use longer cache duration and don't fetch as frequently
+    const cacheDuration = isLive ? this.CACHE_DURATION : 30000; // 30 seconds for non-live sessions
+    
     // Return cached data if it's fresh and valid
-    if (this.cachedData && (now - this.lastFetch) < this.CACHE_DURATION) {
-      console.log('LiveDashboardService: Using cached data');
+    if (this.cachedData && (now - this.lastFetch) < cacheDuration) {
+      console.log('LiveDashboardService: Using cached data (live:', isLive, ')');
       return this.cachedData;
     }
 
-    console.log('LiveDashboardService: Fetching fresh data from OpenF1');
+    console.log('LiveDashboardService: Fetching fresh data from OpenF1 (live:', isLive, ')');
     
     try {
       const data = await OpenF1Service.getLiveData(sessionKey);
@@ -298,7 +341,10 @@ export class LiveDashboardService {
         trackStatus,
         circuit: session.circuit_short_name || "Unknown Circuit",
         location: session.location || "Unknown Location",
-        sessionKey: session.session_key
+        sessionKey: session.session_key,
+        isLive: this.getSessionLiveStatus(),
+        sessionStart: session.date_start ? new Date(session.date_start).toLocaleTimeString() : undefined,
+        sessionEnd: session.date_end ? new Date(session.date_end).toLocaleTimeString() : undefined
       };
     } catch (error) {
       console.error('Error getting session info:', error);
@@ -622,7 +668,10 @@ export class LiveDashboardService {
       },
       circuit: "Marina Bay",
       location: "Singapore",
-      sessionKey: 0
+      sessionKey: 0,
+      isLive: false,
+      sessionStart: "10:00 AM",
+      sessionEnd: "4:00 PM"
     };
   }
 

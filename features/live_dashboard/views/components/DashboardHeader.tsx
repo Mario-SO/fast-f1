@@ -1,6 +1,6 @@
 import { html } from "hono/html";
 
-export const DashboardHeader = () => {
+export const DashboardHeader = ({ isLive = true }: { isLive?: boolean } = {}) => {
   return html`
     <div class="flex items-center justify-between mb-8">
       <div class="flex items-center space-x-4">
@@ -12,8 +12,13 @@ export const DashboardHeader = () => {
         <div>
           <h1 class="text-3xl font-bold text-gray-900">Live Dashboard</h1>
           <div class="flex items-center space-x-2 mt-1">
-            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span class="text-sm text-gray-600">Live Session Active</span>
+            ${isLive ? html`
+              <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span class="text-sm text-gray-600">Live Session Active</span>
+            ` : html`
+              <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
+              <span class="text-sm text-gray-600">Historical Data</span>
+            `}
           </div>
         </div>
       </div>

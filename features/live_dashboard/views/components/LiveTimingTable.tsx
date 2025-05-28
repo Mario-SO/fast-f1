@@ -1,6 +1,6 @@
 import { html } from "hono/html";
 
-export const LiveTimingTable = () => {
+export const LiveTimingTable = ({ isLive = true, intervalsPolling = "load, every 2s, refresh" }: { isLive?: boolean; intervalsPolling?: string } = {}) => {
   return html`
     <div class="lg:col-span-2">
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200">
@@ -11,7 +11,10 @@ export const LiveTimingTable = () => {
               <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              <h2 class="text-lg font-semibold text-gray-900">Live Timing</h2>
+              <h2 class="text-lg font-semibold text-gray-900">${isLive ? 'Live Timing' : 'Session Timing'}</h2>
+              ${!isLive ? html`
+                <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Historical</span>
+              ` : ''}
             </div>
           </div>
           
@@ -36,11 +39,11 @@ export const LiveTimingTable = () => {
             id="live-intervals-data" 
             class="p-3"
             hx-get="/live/api/intervals" 
-            hx-trigger="load, every 2s, refresh"
+            hx-trigger="${intervalsPolling}"
           >
             <!-- Loading message -->
             <div class="text-center py-6 text-gray-500">
-              Loading driver data...
+              ${isLive ? 'Loading driver data...' : 'Loading session data...'}
             </div>
           </div>
         </div>
@@ -63,12 +66,15 @@ export const LiveTimingTable = () => {
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Refresh Interval</label>
-              <select id="refresh-interval" class="w-full border border-gray-300 rounded-md px-3 py-2">
+              <select id="refresh-interval" class="w-full border border-gray-300 rounded-md px-3 py-2" ${!isLive ? 'disabled' : ''}>
                 <option value="1">1 second</option>
                 <option value="2" selected>2 seconds</option>
                 <option value="5">5 seconds</option>
                 <option value="10">10 seconds</option>
               </select>
+              ${!isLive ? html`
+                <p class="text-xs text-gray-500 mt-1">Polling disabled for non-live sessions</p>
+              ` : ''}
             </div>
             
             <div>
@@ -80,9 +86,12 @@ export const LiveTimingTable = () => {
             
             <div>
               <label class="flex items-center">
-                <input type="checkbox" id="sound-alerts" class="mr-2">
+                <input type="checkbox" id="sound-alerts" class="mr-2" ${!isLive ? 'disabled' : ''}>
                 <span class="text-sm text-gray-700">Sound alerts for position changes</span>
               </label>
+              ${!isLive ? html`
+                <p class="text-xs text-gray-500 mt-1">Alerts disabled for non-live sessions</p>
+              ` : ''}
             </div>
           </div>
           

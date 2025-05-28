@@ -17,6 +17,19 @@ liveRoutes.get("/api/intervals", async (c) => {
     const sessionKey = c.req.query('session_key') ? parseInt(c.req.query('session_key')!) : undefined;
     console.log('API /intervals called with sessionKey:', sessionKey);
     
+    // Check if session is live
+    const isLive = await LiveDashboardService.checkIfSessionIsLive(sessionKey);
+    console.log('API /intervals: Session is live:', isLive);
+    
+    // Set appropriate cache headers based on live status
+    if (!isLive) {
+      // For non-live sessions, cache for longer
+      c.header('Cache-Control', 'public, max-age=300'); // 5 minutes
+    } else {
+      // For live sessions, minimal caching
+      c.header('Cache-Control', 'public, max-age=2'); // 2 seconds
+    }
+    
     const drivers = await LiveDashboardService.getDriversWithLiveData(sessionKey);
     console.log('API /intervals: Got', drivers.length, 'drivers');
     
@@ -37,7 +50,7 @@ liveRoutes.get("/api/intervals", async (c) => {
     `);
   } catch (error) {
     console.error('Error fetching intervals:', error);
-    return c.html(`<div class="text-red-500 p-4">Error loading live data. Please try again.</div>`);
+    return c.html(`<div class="text-red-500 p-4">Error loading data. Please try again.</div>`);
   }
 });
 
@@ -45,6 +58,17 @@ liveRoutes.get("/api/intervals", async (c) => {
 liveRoutes.get("/api/stats", async (c) => {
   try {
     const sessionKey = c.req.query('session_key') ? parseInt(c.req.query('session_key')!) : undefined;
+    
+    // Check if session is live
+    const isLive = await LiveDashboardService.checkIfSessionIsLive(sessionKey);
+    
+    // Set appropriate cache headers based on live status
+    if (!isLive) {
+      c.header('Cache-Control', 'public, max-age=300'); // 5 minutes
+    } else {
+      c.header('Cache-Control', 'public, max-age=5'); // 5 seconds
+    }
+    
     const stats = await LiveDashboardService.getDashboardStats(sessionKey);
     
     return c.html(StatsGrid({ stats }));

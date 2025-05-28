@@ -109,6 +109,55 @@ export interface OpenF1Lap {
 export class OpenF1Service {
   private static readonly BASE_URL = 'https://api.openf1.org/v1';
   
+  // Check if a session is currently live
+  static async isSessionLive(session?: OpenF1Session): Promise<boolean> {
+    try {
+      // If no session provided, get the latest one
+      const currentSession = session || await this.getLatestSession();
+      if (!currentSession) return false;
+
+      const now = new Date();
+      const sessionStart = new Date(currentSession.date_start);
+      const sessionEnd = new Date(currentSession.date_end);
+
+      // Check if we're within the session time window
+      const isWithinTimeWindow = now >= sessionStart && now <= sessionEnd;
+      
+      // For races and qualifying, also check for recent data activity
+      if (currentSession.session_type === 'Race' || currentSession.session_type === 'Qualifying') {
+        // Check for recent intervals data (only available during live sessions)
+        const intervals = await this.getIntervals(currentSession.session_key);
+        if (intervals.length > 0) {
+          // Check if we have intervals data from the last 2 minutes
+          const latestInterval = intervals[intervals.length - 1];
+          const intervalTime = new Date(latestInterval.date);
+          const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
+          
+          return intervalTime > twoMinutesAgo;
+        }
+      }
+
+      // For practice sessions, check for recent car data
+      if (currentSession.session_type === 'Practice') {
+        const carData = await this.getLatestCarData(currentSession.session_key);
+        if (carData.length > 0) {
+          // Check if we have car data from the last 2 minutes
+          const latestCarData = carData[carData.length - 1];
+          const carDataTime = new Date(latestCarData.date);
+          const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
+          
+          return carDataTime > twoMinutesAgo;
+        }
+      }
+
+      // Fallback to time window check
+      return isWithinTimeWindow;
+    } catch (error) {
+      console.error('Error checking if session is live:', error);
+      return false;
+    }
+  }
+
   // Get the latest session
   static async getLatestSession(): Promise<OpenF1Session | null> {
     try {
